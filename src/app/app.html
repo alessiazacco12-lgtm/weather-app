@@ -1,0 +1,154 @@
+<main class="weather-container">
+  <!-- INTESTAZIONE -->
+  <header class="page-header">
+    <h1>🌤️ Weather App 🌤️</h1>
+    <p>Check the current weather and the hourly forecast.</p>
+  </header>
+
+  <!-- FORM DI RICERCA DELLA LOCALITÀ -->
+  <form class="search-form" [formGroup]="searchForm" (ngSubmit)="searchWeather()">
+    <label for="location">Location</label>
+
+    <div class="search-controls">
+      <input id="location" type="text" placeholder="Enter a city" formControlName="location" />
+      <button type="submit" [disabled]="weatherResource.isLoading()">Search</button>
+    </div>
+  </form>
+
+  <!-- STATO INIZIALE -->
+  @if (location() === '') {
+    <div class="state-message">
+      <span class="state-icon">🔎</span>
+      <p>Enter a location to check the weather.</p>
+    </div>
+  }
+
+  <!-- STATO DI CARICAMENTO -->
+  @if (weatherResource.isLoading() && !weatherResource.hasValue()) {
+    <div class="state-message">
+      <span class="state-icon">⏳</span>
+      <p>Loading weather...</p>
+    </div>
+  }
+
+  <!-- STATO DI ERRORE -->
+  @if (weatherResource.error()) {
+    <div class="error-message">
+      <span class="state-icon">⚠️</span>
+      <p>Something went wrong.</p>
+      <button type="button" (click)="retry()">Try again</button>
+    </div>
+  }
+
+  <!-- STATO DI SUCCESSO -->
+  @if (weatherResource.hasValue()) {
+    @let weather = weatherResource.value();
+
+    <!-- CONDIZIONI ATTUALI -->
+    <section class="weather-card">
+      <div class="current-weather-header">
+        <div>
+          <p class="current-label">Current weather</p>
+          <h2>{{ weather.resolvedAddress }}</h2>
+        </div>
+
+        <span class="weather-emoji" aria-hidden="true">
+          {{ getWeatherEmoji(weather.currentConditions.conditions) }}
+        </span>
+      </div>
+
+      <div class="weather-info">
+        <div class="weather-detail">
+          <span aria-hidden="true">🌡️</span>
+
+          <div>
+            <strong>Temperature</strong>
+            <p>{{ weather.currentConditions.temp }} °C</p>
+          </div>
+        </div>
+
+        <div class="weather-detail">
+          <span aria-hidden="true">💨</span>
+
+          <div>
+            <strong>Wind speed</strong>
+            <p>{{ weather.currentConditions.windspeed }} km/h</p>
+          </div>
+        </div>
+
+        <div class="weather-detail">
+          <span aria-hidden="true">💧</span>
+
+          <div>
+            <strong>Rain probability</strong>
+            <p>{{ weather.currentConditions.precipprob }}%</p>
+          </div>
+        </div>
+
+        <div class="weather-detail">
+          <span aria-hidden="true">
+            {{ getWeatherEmoji(weather.currentConditions.conditions) }}
+          </span>
+
+          <div>
+            <strong>Conditions</strong>
+            <p>{{ weather.currentConditions.conditions }}</p>
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="refresh-button"
+        (click)="refresh()"
+        [disabled]="weatherResource.isLoading()"
+      >
+        ↻ Refresh
+      </button>
+    </section>
+
+    <!-- 24 ORE PRECEDENTI -->
+    <section class="hourly-section">
+      <h2>Previous 24 Hours</h2>
+
+      <div class="hourly-list">
+        @for (hour of previous24Hours(); track hour.datetimeEpoch) {
+          <article class="hour-card">
+            <div class="hour-emoji" aria-hidden="true">
+              {{ getWeatherEmoji(hour.conditions) }}
+            </div>
+
+            <h3>{{ hour.datetimeEpoch * 1000 | date: 'dd/MM HH:mm' }}</h3>
+
+            <p>🌡️ {{ hour.temp }} °C</p>
+            <p>💨 {{ hour.windspeed }} km/h</p>
+            <p>💧 {{ hour.precipprob }}%</p>
+            <p class="conditions">{{ hour.conditions }}</p>
+          </article>
+        }
+      </div>
+    </section>
+
+    <!-- 24 ORE SUCC -->
+    <section class="hourly-section">
+      <h2>Next 24 Hours</h2>
+
+      <div class="hourly-list">
+        @for (hour of next24Hours(); track hour.datetimeEpoch) {
+          <article class="hour-card">
+            <div class="hour-emoji" aria-hidden="true">
+              {{ getWeatherEmoji(hour.conditions) }}
+            </div>
+
+            <h3>{{ hour.datetimeEpoch * 1000 | date: 'dd/MM HH:mm' }}</h3>
+
+            <p>🌡️ {{ hour.temp }} °C</p>
+            <p>💨 {{ hour.windspeed }} km/h</p>
+            <p>💧 {{ hour.precipprob }}%</p>
+            <p class="conditions">{{ hour.conditions }}</p>
+          </article>
+        }
+      </div>
+    </section>
+  }
+</main>
